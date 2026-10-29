@@ -1,49 +1,22 @@
 @echo off
-setlocal enabledelayedexpansion
 chcp 65001 >nul
-
 echo ========================================================
 echo   Habit ^& Financial - Upload ke GitHub ^& Buat APK
 echo ========================================================
 echo.
 
-:: 1. Deteksi letak Git di komputer
-set "GIT_EXE="
+:: Set path Git portable otomatis jika belum ada di path utama
+set "PATH=%LOCALAPPDATA%\Programs\Git\cmd;%PATH%"
 
-:: Cek Git di PATH
 where git >nul 2>nul
-if %ERRORLEVEL% EQU 0 (
-    set "GIT_EXE=git"
-)
-
-:: Cek Git di LocalAppData
-if not defined GIT_EXE (
-    if exist "%LOCALAPPDATA%\Programs\Git\cmd\git.exe" (
-        set "GIT_EXE=%LOCALAPPDATA%\Programs\Git\cmd\git.exe"
-    )
-)
-
-:: Cek Git di Program Files
-if not defined GIT_EXE (
-    if exist "C:\Program Files\Git\cmd\git.exe" (
-        set "GIT_EXE=C:\Program Files\Git\cmd\git.exe"
-    )
-)
-
-if not defined GIT_EXE (
-    echo [PERHATIAN] Git belum terdeteksi di komputer Anda.
-    echo.
-    echo Sedang menyiapkan Git otomatis, mohon tunggu sebentar...
-    echo Atau silakan instal Git dari: https://git-scm.com/download/win
-    echo.
+if %ERRORLEVEL% NEQ 0 (
+    echo [ERROR] Git tidak ditemukan.
     pause
     exit /b 1
 )
 
-echo [OK] Menggunakan Git: "%GIT_EXE%"
+echo [OK] Git terdeteksi dengan baik.
 echo.
-
-:: 2. Meminta input URL Repositori
 echo Silakan masukkan URL Repositori GitHub Anda:
 echo (Contoh: https://github.com/username-anda/habit-and-financial.git)
 echo.
@@ -51,8 +24,27 @@ set /p REPO_URL="URL GitHub: "
 
 if "%REPO_URL%"=="" (
     echo.
-    echo [ERROR] URL Repositori tidak boleh kosong!
-    echo Silakan jalankan ulang file ini dan masukkan URL repository Anda.
+    echo [PERINGATAN] URL tidak boleh kosong! Silakan buka kembali file ini.
+    echo.
+    pause
+    exit /b 1
+)
+
+echo.
+echo [1/2] Menyiapkan remote origin...
+git remote remove origin >nul 2>nul
+git remote add origin %REPO_URL%
+
+echo.
+echo [2/2] Mengupload file ke GitHub...
+git push -u origin main --force
+
+if %ERRORLEVEL% NEQ 0 (
+    echo.
+    echo [PERHATIAN] Upload ke GitHub belum berhasil.
+    echo Kemungkinan penyebab:
+    echo 1. Anda belum login akun GitHub di browser / pop-up login.
+    echo 2. URL repositori salah atau repositori belum dibuat di github.com.
     echo.
     pause
     exit /b 1
@@ -60,33 +52,12 @@ if "%REPO_URL%"=="" (
 
 echo.
 echo ========================================================
-echo [1/4] Menginisialisasi git repository...
-"%GIT_EXE%" init
-"%GIT_EXE%" branch -M main
-
-echo.
-echo [2/4] Mendaftarkan file proyek...
-"%GIT_EXE%" add .
-
-echo.
-echo [3/4] Membuat commit...
-"%GIT_EXE%" commit -m "Build Habit & Financial App v1.0"
-
-echo.
-echo [4/4] Mengirim kode ke GitHub (%REPO_URL%)...
-"%GIT_EXE%" remote remove origin >nul 2>nul
-"%GIT_EXE%" remote add origin %REPO_URL%
-"%GIT_EXE%" push -u origin main --force
-
-echo.
-echo ========================================================
-echo   PROSES SELESAI!
+echo   BERHASIL! KODE SUDAH TERUPLOAD KE GITHUB!
 echo ========================================================
 echo.
-echo Langkah selanjutnya untuk mengambil file APK:
-echo 1. Buka repositori GitHub Anda di browser
-echo 2. Klik tab "Actions" di menu atas
-echo 3. Tunggu 2-3 menit hingga workflow selesai (centang hijau)
-echo 4. Unduh file APK di bagian "Artifacts" atau menu "Releases"
+echo Sekarang buka browser Anda di halaman repositori GitHub:
+echo 1. Klik tab "Actions" di menu atas repositori
+echo 2. Tunggu 2-3 menit hingga workflow selesai (centang hijau)
+echo 3. Unduh file APK di bagian "Artifacts" atau menu "Releases"
 echo.
 pause
